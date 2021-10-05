@@ -16,7 +16,7 @@ func (app *App) HTTPServerMain() {
 	e.Use(echoMid.CORS())
 
 	e.Debug = true
-	handlerGroup := e.Group("/batch-disbursements")
+	handlerGroup := e.Group("/batch_disbursements")
 	app.DisbursementHandler.Mount(handlerGroup)
 
 

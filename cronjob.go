@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"github.com/vaniairnanda/send-later/config"
 	"github.com/vaniairnanda/send-later/config/kafka"
+	"github.com/vaniairnanda/send-later/environment"
 	"github.com/vaniairnanda/send-later/model/disbursement"
 	"github.com/vaniairnanda/send-later/model/enum"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -74,9 +76,12 @@ func (job *job) JobApprovalExpired() {
 func (job *job) JobScheduledBatchDisbursement() {
 	db := config.GetDBDisbursement()
 	var batchResult []disbursement.BatchDisbursement
-
+	env := environment.Load()
 	timeNow := time.Now()
-	defaultDate := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), 17,50,0, 0, time.UTC)
+	scheduledDisbursementTime := strings.Split(env.ScheduledDisbursementTime, ":")
+	scheduledDisbursementHour, _ := strconv.Atoi(scheduledDisbursementTime[0])
+	scheduledDisbursementMinutes, _ := strconv.Atoi(scheduledDisbursementTime[1])
+	defaultDate := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), scheduledDisbursementHour, scheduledDisbursementMinutes,0, 0, time.UTC)
 
 	err := db.Model(&disbursement.BatchDisbursement{}).
 		Where("is_send_later = ?", true).
@@ -109,7 +114,6 @@ func (job *job) JobScheduledBatchDisbursement() {
 
 func publishEventDisbursementApply(item interface{}) {
 	fmt.Printf("success push data into kafka for disbursement: %v", item)
-
 	// message should be consumed by itself
 	// loop each disbursement item
 	// proceed to call TransactionService and others
