@@ -24,6 +24,11 @@ type (
 		BankAccountNumber string `json:"bank_account_number"`
 		Description       string `json:"description" `
 	}
+
+	ApproveDisbursement struct {
+		IsInstantDisbursement bool    `json:"is_instant_disbursement"`
+		NewScheduledDate      *string `json:"new_scheduled_date"`
+	}
 )
 
 func (data CreateDisbursement) ToStoreBatch() disbursement.BatchDisbursement {

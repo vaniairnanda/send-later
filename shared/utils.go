@@ -36,3 +36,21 @@ func GetUserLogin(c echo.Context) string {
 	login := val.(string)
 	return login
 }
+
+func ValidateApprove(payload dto.ApproveDisbursement) error {
+
+	if !payload.IsInstantDisbursement && payload.NewScheduledDate == nil {
+		return errors.New("new scheduled date is required if instant disbursement is not chosen")
+	}
+
+	scheduledDate, err := time.Parse("2006-01-02", *payload.NewScheduledDate)
+	if err != nil {
+		return errors.New("invalid date format")
+	}
+
+	if scheduledDate.Before(time.Now()) {
+		return errors.New("scheduled date must be greater than today")
+	}
+
+	return nil
+}

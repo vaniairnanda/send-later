@@ -7,6 +7,7 @@ import (
 	"github.com/vaniairnanda/send-later/environment"
 	"github.com/vaniairnanda/send-later/model/disbursement"
 	"github.com/vaniairnanda/send-later/model/enum"
+	"github.com/vaniairnanda/send-later/shared"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 	"os"
@@ -68,7 +69,7 @@ func (job *job) JobApprovalExpired() {
 			continue
 		}
 
-		go publishEventApprovalExpired(item) // publish message to be consumed by NotificationService
+		go shared.PublishEventApprovalExpired(item) // publish message to be consumed by NotificationService
 	}
 }
 
@@ -108,17 +109,7 @@ func (job *job) JobScheduledBatchDisbursement() {
 			continue
 		}
 
-		go publishEventDisbursementApply(item) // publish message to be consumed by itself
+		go shared.PublishEventDisbursementApply(item) // publish message to be consumed by itself
 	}
 }
 
-func publishEventDisbursementApply(item interface{}) {
-	fmt.Printf("success push data into kafka for disbursement: %v", item)
-	// message should be consumed by itself
-	// loop each disbursement item
-	// proceed to call TransactionService and others
-
-}
-func publishEventApprovalExpired(item interface{}) {
-	fmt.Printf("success push data into kafka for expired approval: %v", item)
-}
