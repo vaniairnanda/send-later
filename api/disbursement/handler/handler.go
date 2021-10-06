@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/labstack/echo"
+	"github.com/vaniairnanda/send-later/api/disbursement"
 	"github.com/vaniairnanda/send-later/api/disbursement/batchRepository"
 	"github.com/vaniairnanda/send-later/api/disbursement/disbursementRepository"
 	"github.com/vaniairnanda/send-later/config"
@@ -19,16 +20,22 @@ import (
 
 type HTTPDisbursementHandler struct {
 	DBDisbursement *gorm.DB
+	BatchRepo disbursement.BatchRepository
+	DisbursementRepo disbursement.DisbursementRepository
 }
 
 func NewHTTPHandler(dbDisbursement *gorm.DB) *HTTPDisbursementHandler {
+	batchRepo := batchRepository.NewRepository()
+	disbursementRepo := disbursementRepository.NewRepository()
 	return &HTTPDisbursementHandler{
 		DBDisbursement: dbDisbursement,
+		BatchRepo: batchRepo,
+		DisbursementRepo: disbursementRepo,
 	}
 }
 
 func (h *HTTPDisbursementHandler) Mount(group *echo.Group) {
-	group.POST("/", h.CreateBatchDisbursement)
+	group.POST("", h.CreateBatchDisbursement)
 	group.PATCH("/approve/:batchId", h.ApproveBatchDisbursement)
 }
 
@@ -57,14 +64,14 @@ func (h *HTTPDisbursementHandler) CreateBatchDisbursement(c echo.Context) error 
 	storeBatch := payloadData.ToStoreBatch()
 	tx := config.GetDBDisbursement().Begin()
 
-	result, err := batchRepository.Store(ctx, tx, storeBatch)
+	result, err := h.BatchRepo.Store(ctx, tx, storeBatch)
 	if err != nil {
 		tx.Rollback()
 		return err
 	}
 
 	storeItems := dto.ToStoreItems(payloadData.Disbursements, storeBatch.ID)
-	rowsAffected, err := disbursementRepository.BulkStore(ctx, tx, storeItems)
+	rowsAffected, err := h.DisbursementRepo.BulkStore(ctx, tx, storeItems)
 	if err != nil || rowsAffected == 0 {
 		tx.Rollback()
 		return err
@@ -112,7 +119,7 @@ func (h *HTTPDisbursementHandler) ApproveBatchDisbursement(c echo.Context) error
 	}
 
 	db := config.GetDBDisbursement()
-	result, err := batchRepository.PatchByID(ctx, db, updateData, uint64(batchID))
+	result, err := h.BatchRepo.PatchByID(ctx, db, updateData, uint64(batchID))
 	if err != nil{
 		return err
 	}

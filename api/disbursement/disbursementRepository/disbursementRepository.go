@@ -2,16 +2,17 @@ package disbursementRepository
 
 import (
 	"context"
+	"github.com/vaniairnanda/send-later/api/disbursement"
 	dao "github.com/vaniairnanda/send-later/model/disbursement"
 	"gorm.io/gorm"
 )
+type disbursementRepository struct {}
 
-type Repository interface {
-	BulkStore(ctx context.Context, db *gorm.DB, data []dao.Disbursement) (int64, error)
+
+func NewRepository() disbursement.DisbursementRepository{
+	return &disbursementRepository{}
 }
-
-
-func BulkStore(ctx context.Context, db *gorm.DB,
+func (r *disbursementRepository) BulkStore(ctx context.Context, db *gorm.DB,
 	data []dao.Disbursement) (int64, error) {
 
 	result := db.CreateInBatches(data, 10000)

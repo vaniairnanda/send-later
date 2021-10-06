@@ -2,15 +2,20 @@ package batchRepository
 
 import (
 	"context"
+	"github.com/vaniairnanda/send-later/api/disbursement"
 	dao "github.com/vaniairnanda/send-later/model/disbursement"
 	"gorm.io/gorm"
 )
 
-type Repository interface {
-	Store(ctx context.Context, db *gorm.DB, data dao.BatchDisbursement) (dao.BatchDisbursement, error)
+
+type batchRepository struct {}
+
+
+func NewRepository() disbursement.BatchRepository {
+	return &batchRepository{}
 }
 
-func Store(ctx context.Context, db *gorm.DB,
+func (r *batchRepository) Store(ctx context.Context, db *gorm.DB,
 	data dao.BatchDisbursement) (dao.BatchDisbursement, error) {
 
 	result := db.Create(&data)
@@ -21,7 +26,7 @@ func Store(ctx context.Context, db *gorm.DB,
 	return data, nil
 }
 
-func PatchByID(ctx context.Context, db *gorm.DB,
+func (r *batchRepository) PatchByID(ctx context.Context, db *gorm.DB,
 	data map[string]interface{}, id uint64) (*dao.BatchDisbursement, error) {
 	var result dao.BatchDisbursement
 	if err := db.
