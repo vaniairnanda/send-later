@@ -51,6 +51,10 @@ func main(){
 	}
 
 
+	if _, err = c.AddFunc(env.SendApprovalReminder, job.JobApprovalReminder); err != nil {
+		zapLogger.Error(err.Error())
+	}
+
 	c.Start()
 
 	run := app.MakeHandler(dbDisbursement)

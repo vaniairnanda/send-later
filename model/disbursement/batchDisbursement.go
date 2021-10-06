@@ -18,4 +18,5 @@ type BatchDisbursement struct {
 	Status              enum.Status `json:"status" gorm:"not null"`
 	CreatedAt           time.Time   `json:"created_at" gorm:"not null"`
 	UpdatedAt           time.Time   `json:"updated_at" gorm:"not null"`
+	ReminderSentAt      *time.Time  `json:"reminder_sent_at" gorm:"null"`
 }

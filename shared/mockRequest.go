@@ -23,3 +23,7 @@ func PublishEventDisbursementApply(item interface{}) {
 func PublishEventApprovalExpired(item interface{}) {
 	fmt.Printf("success push data into kafka for expired approval: %v", item)
 }
+
+func PublishEventApprovalReminder(item interface{}) {
+	fmt.Printf("success push data into kafka for reminder approval: %v", item)
+}

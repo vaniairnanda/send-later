@@ -15,9 +15,11 @@ import (
 	"strings"
 	"time"
 )
+
 type Interface interface {
 	JobApprovalExpired()
 	JobScheduledBatchDisbursement()
+	JobApprovalReminder()
 
 	InitializePublisher()
 }
@@ -29,7 +31,6 @@ type job struct {
 func NewJob() Interface {
 	return &job{}
 }
-
 
 func (job *job) InitializePublisher() {
 	// connect to kafka
@@ -57,8 +58,8 @@ func (job *job) JobApprovalExpired() {
 	}
 
 	updateData := map[string]interface{}{
-		"status":         enum.EXPIRED,
-		"updated_at":      time.Now(),
+		"status":     enum.EXPIRED,
+		"updated_at": time.Now(),
 	}
 
 	for _, item := range batchResult {
@@ -73,7 +74,6 @@ func (job *job) JobApprovalExpired() {
 	}
 }
 
-
 func (job *job) JobScheduledBatchDisbursement() {
 	db := config.GetDBDisbursement()
 	var batchResult []disbursement.BatchDisbursement
@@ -82,7 +82,7 @@ func (job *job) JobScheduledBatchDisbursement() {
 	scheduledDisbursementTime := strings.Split(env.ScheduledDisbursementTime, ":")
 	scheduledDisbursementHour, _ := strconv.Atoi(scheduledDisbursementTime[0])
 	scheduledDisbursementMinutes, _ := strconv.Atoi(scheduledDisbursementTime[1])
-	defaultDate := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), scheduledDisbursementHour, scheduledDisbursementMinutes,0, 0, time.UTC)
+	defaultDate := time.Date(timeNow.Year(), timeNow.Month(), timeNow.Day(), scheduledDisbursementHour, scheduledDisbursementMinutes, 0, 0, time.UTC)
 
 	err := db.Model(&disbursement.BatchDisbursement{}).
 		Where("is_send_later = ?", true).
@@ -97,8 +97,8 @@ func (job *job) JobScheduledBatchDisbursement() {
 	}
 
 	updateData := map[string]interface{}{
-		"status":         enum.PROCESSING,
-		"updated_at":      time.Now(),
+		"status":     enum.PROCESSING,
+		"updated_at": time.Now(),
 	}
 
 	for _, item := range batchResult {
@@ -113,3 +113,35 @@ func (job *job) JobScheduledBatchDisbursement() {
 	}
 }
 
+func (job *job) JobApprovalReminder() {
+	db := config.GetDBDisbursement()
+	var batchResult []disbursement.BatchDisbursement
+
+	err := db.Model(&disbursement.BatchDisbursement{}).
+		Where("is_send_later = ?", true).
+		Where("status = ?", enum.NEEDS_APPROVAL).
+		Where("DATE_PART('day', scheduled_date - current_date AT time zone country_code) = 1").
+		Where("reminder_sent_at IS NULL").
+		Find(&batchResult).Error
+
+	if err != nil {
+		zap.S().Errorf("Error query get unapproved batch disbursement D-1. Error= %v", err.Error())
+		return
+	}
+
+	updateData := map[string]interface{}{
+		"reminder_sent_at": time.Now(),
+		"updated_at":       time.Now(),
+	}
+
+	for _, item := range batchResult {
+		if err = db.Model(&disbursement.BatchDisbursement{}).
+			Where("id = ?", item.ID).
+			Updates(updateData).Error; err != nil {
+			zap.S().Errorf("Error query update reminder sent batch disbursement. Error= %v", err.Error())
+			continue
+		}
+
+		go shared.PublishEventApprovalReminder(item) // publish message to be consumed by NotificationService
+	}
+}

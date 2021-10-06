@@ -14,6 +14,7 @@ type Env struct {
 	MarkApprovalExpired        string
 	ScheduledBatchDisbursement string
 	ScheduledDisbursementTime  string
+	SendApprovalReminder       string
 }
 
 func Load() *Env {
@@ -28,5 +29,6 @@ func Load() *Env {
 		MarkApprovalExpired:        os.Getenv("MARK_APPROVAL_EXPIRED"),
 		ScheduledBatchDisbursement: os.Getenv("SCHEDULED_BATCH_DISBURSEMENT"),
 		ScheduledDisbursementTime:  os.Getenv("SCHEDULED_DISBURSEMENT_TIME"),
+		SendApprovalReminder:       os.Getenv("SEND_APPROVAL_REMINDER"),
 	}
 }
