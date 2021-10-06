@@ -3,6 +3,7 @@ module github.com/vaniairnanda/send-later
 go 1.16
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/golang/mock v1.6.0 // indirect

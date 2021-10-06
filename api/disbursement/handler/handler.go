@@ -5,8 +5,6 @@ import (
 	"errors"
 	"github.com/labstack/echo"
 	"github.com/vaniairnanda/send-later/api/disbursement"
-	"github.com/vaniairnanda/send-later/api/disbursement/batchRepository"
-	"github.com/vaniairnanda/send-later/api/disbursement/disbursementRepository"
 	"github.com/vaniairnanda/send-later/config"
 	"github.com/vaniairnanda/send-later/model/constant"
 	"github.com/vaniairnanda/send-later/model/dto"
@@ -19,17 +17,16 @@ import (
 )
 
 type HTTPDisbursementHandler struct {
-	DBDisbursement *gorm.DB
-	BatchRepo disbursement.BatchRepository
+	DBDisbursement   *gorm.DB
+	BatchRepo        disbursement.BatchRepository
 	DisbursementRepo disbursement.DisbursementRepository
 }
 
-func NewHTTPHandler(dbDisbursement *gorm.DB) *HTTPDisbursementHandler {
-	batchRepo := batchRepository.NewRepository()
-	disbursementRepo := disbursementRepository.NewRepository()
+func NewHTTPHandler(dbDisbursement *gorm.DB, batchRepo disbursement.BatchRepository, disbursementRepo disbursement.DisbursementRepository) *HTTPDisbursementHandler {
+
 	return &HTTPDisbursementHandler{
-		DBDisbursement: dbDisbursement,
-		BatchRepo: batchRepo,
+		DBDisbursement:   dbDisbursement,
+		BatchRepo:        batchRepo,
 		DisbursementRepo: disbursementRepo,
 	}
 }
@@ -62,7 +59,8 @@ func (h *HTTPDisbursementHandler) CreateBatchDisbursement(c echo.Context) error 
 		return err
 	}
 	storeBatch := payloadData.ToStoreBatch()
-	tx := config.GetDBDisbursement().Begin()
+	tx := h.DBDisbursement
+	tx.Begin()
 
 	result, err := h.BatchRepo.Store(ctx, tx, storeBatch)
 	if err != nil {
@@ -107,7 +105,7 @@ func (h *HTTPDisbursementHandler) ApproveBatchDisbursement(c echo.Context) error
 
 	if payloadData.IsInstantDisbursement {
 		updateData = map[string]interface{}{
-			"status":         enum.PROCESSING,
+			"status": enum.PROCESSING,
 		}
 
 	} else {
@@ -120,7 +118,7 @@ func (h *HTTPDisbursementHandler) ApproveBatchDisbursement(c echo.Context) error
 
 	db := config.GetDBDisbursement()
 	result, err := h.BatchRepo.PatchByID(ctx, db, updateData, uint64(batchID))
-	if err != nil{
+	if err != nil {
 		return err
 	}
 

@@ -1,6 +1,8 @@
 package app
 
 import (
+	"github.com/vaniairnanda/send-later/api/disbursement/batchRepository"
+	"github.com/vaniairnanda/send-later/api/disbursement/disbursementRepository"
 	"github.com/vaniairnanda/send-later/api/disbursement/handler"
 	"gorm.io/gorm"
 	"sync"
@@ -11,7 +13,9 @@ type App struct {
 }
 
 func MakeHandler(dbDisbursement *gorm.DB) *App {
-	disbursementNewHandler := handler.NewHTTPHandler(dbDisbursement)
+	batchRepo := batchRepository.NewRepository()
+	disbursementRepo := disbursementRepository.NewRepository()
+	disbursementNewHandler := handler.NewHTTPHandler(dbDisbursement, batchRepo, disbursementRepo)
 
 	return &App{
 		DisbursementHandler: disbursementNewHandler,
