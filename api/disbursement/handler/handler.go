@@ -124,7 +124,10 @@ func (h *HTTPDisbursementHandler) ApproveBatchDisbursement(c echo.Context) error
 
 	if payloadData.IsInstantDisbursement {
 		go shared.PublishEventDisbursementApply(result)
+	} else {
+		go shared.MockTransactionServiceWithholdBalance()
 	}
+
 
 	return c.JSON(http.StatusOK, result)
 

@@ -12,6 +12,11 @@ func MockBusinessServiceGetUserLogin(login string) error {
 	return nil
 }
 
+func MockTransactionServiceWithholdBalance() string {
+	res := fmt.Sprintf("success hit transaction service to withhold balance")
+	return res
+}
+
 
 func PublishEventDisbursementApply(item interface{}) {
 	fmt.Printf("success push data into kafka for disbursement: %v", item)

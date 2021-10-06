@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/golang/mock/gomock"
 	"github.com/labstack/echo"
@@ -110,9 +111,7 @@ func (s *TestingHandlerSuite) TestHTTPDisbursementHandler_CreateBatchDisbursemen
 
 		httpRes := httptest.NewRecorder()
 		echoCtx := ec.NewContext(httpReq, httpRes)
-		//db := gorm.DB{}
-		//
-		//
+
 		daoBatch := disbursement.BatchDisbursement{
 			ClientID:            request.ClientID,
 			Reference:           &request.Reference,
@@ -141,5 +140,50 @@ func (s *TestingHandlerSuite) TestHTTPDisbursementHandler_CreateBatchDisbursemen
 		err := s.Handler.CreateBatchDisbursement(echoCtx)
 
 		s.Nil(err)
+	})
+
+	s.Run("when got error invalid date", func() {
+		scheduledDateString := "2021 August 8"
+		expectedErr := echo.NewHTTPError(
+			http.StatusBadRequest,
+			errors.New("invalid date format").Error(),
+		)
+
+		request := dto.CreateDisbursement{
+			Reference:     "",
+			ScheduledDate: &scheduledDateString,
+			ClientID:      1,
+			CountryCode:   "Asia/Jakarta",
+			IsSendLater:   true,
+			Disbursements: []dto.Disbursement{
+				{
+					ExternalID:        "",
+					Amount:            10000,
+					BankCode:          "1",
+					BankAccountName:   "test",
+					BankAccountNumber: "123445",
+					Description:       "test",
+				},
+			},
+		}
+
+		reqByte, _ := json.Marshal(request)
+
+		ec := echo.New()
+
+		httpReq := httptest.NewRequest(
+			http.MethodPost,
+			"/batch_disbursements",
+			strings.NewReader(string(reqByte)),
+		)
+		httpReq.Header.Add(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		httpRes := httptest.NewRecorder()
+		echoCtx := ec.NewContext(httpReq, httpRes)
+
+
+		err := s.Handler.CreateBatchDisbursement(echoCtx)
+
+		s.Equal(expectedErr, err)
 	})
 }
