@@ -14,6 +14,7 @@ require (
 	github.com/segmentio/kafka-go v0.4.20
 	github.com/stretchr/testify v1.7.0 // indirect
 	go.uber.org/zap v1.13.0
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	gorm.io/driver/postgres v1.1.2
 	gorm.io/gorm v1.21.15
 )
